@@ -1,0 +1,74 @@
+eyetracker.hw.adhawk.EyeTracker:
+    # Indicates if the device should actually be loaded at experiment runtime.
+    enable: True
+
+    # The variable name of the device that will be used to access the ioHub Device class
+    # during experiment run-time, via the devices.[name] attribute of the ioHub
+    # connection or experiment runtime class.
+    name: tracker
+
+    device_number: 0
+
+    # Should eye tracker events be saved to the ioHub DataStore file when the device
+    # is recording data ?
+    save_events: True
+
+    # Should eye tracker events be sent to the Experiment process when the device
+    # is recording data ?
+    stream_events: True
+
+    # How many eye events (including samples) should be saved in the ioHub event buffer before
+    # old eye events start being replaced by new events. When the event buffer reaches
+    # the maximum event length of the buffer defined here, older events will start to be dropped.
+    event_buffer_length: 1024
+
+    # The AdHawk implementation of the common eye tracking interface is currently only supporting
+    # the BinocularEyeSampleEvent and BlinkEndEvent event type
+    monitor_event_types: [BinocularEyeSampleEvent, BlinkEndEvent]
+
+    # The default AdHawk eyetracker model name
+    model_name: MindLink
+
+    # the name used by the builder app in the eyetracker dropdown menu
+    manufacturer_name: AdHawk Microsystems
+
+    # Do not change this value.
+    auto_report_events: False
+
+    runtime_settings:
+        # Sets the sampling rate for the session in Hz
+        # The supported gaze rates are 30, 60, 125, 200, 250, 333, and 500
+        # The default rate is 125 Hz
+        sampling_rate: 125
+
+        # The sampling duration of each calibration point in ms
+        # The default value is 500
+        calibration_sampling_duration: 500
+
+        # Screen Tracking variables.
+        enable_screen_tracking:
+
+        aruco_info_file:
+
+    calibration:
+
+        # Number of calibration points to present.
+        # THREE_POINTS,FIVE_POINTS,NINE_POINTS, THIRTEEN_POINTS
+        type: NINE_POINTS
+
+        # color_type: rgb, rgb255, named, hex, etc. Leave blank to use window's color space.
+        color_type:
+
+        # unit_type: norm, pix, height, deg, etc. Leave blank to use window's unit type.
+        unit_type:
+
+        # Should the target positions be randomized?
+        randomize: True
+
+        # screen_background_color specifies the background color to
+        # set the calibration screens to.
+        screen_background_color: [128,128,128]
+
+        # text_color specifies the foreground color of any text used during calibration.
+        # If empty, text_color is calculated automatically based on screen_background_color.
+        text_color:

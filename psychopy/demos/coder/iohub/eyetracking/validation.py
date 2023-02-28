@@ -10,8 +10,14 @@ from psychopy import iohub
 from psychopy.iohub.client.eyetracker.validation import TargetStim
 from psychopy.iohub.util import hideWindow, showWindow
 
-# Eye tracker to use ('mouse', 'eyelink', 'gazepoint', or 'tobii')
+# Eye tracker to use ('mouse', 'eyelink', 'gazepoint', 'tobii', or 'adhawk')
 TRACKER = 'mouse'
+
+# if chosen eyetracker is adhawk, define ARUCO_INFO_LOCATION with the path to your aruco_info.xlsx file
+ARUCO_INFO_LOCATION = 'C:/insert_your_path_here/aruco_info.xlsx'
+# PsychoPy monitor name (accessible in the builder Monitor Center). Monitor size and resolution needs to be defined
+# correctly when using screen tracking with Adhawk Eye Tracker
+MONITOR_NAME = '55w_60dist'
 
 use_unit_type = 'height'
 use_color_type = 'rgb'
@@ -99,6 +105,11 @@ elif TRACKER == 'tobii':
                                                                    )
                                             )
     devices_config['eyetracker.hw.tobii.EyeTracker'] = eyetracker_config
+elif TRACKER == 'adhawk':
+    eyetracker_config['runtime_settings'] = dict(sampling_rate=125, calibration_sampling_duration=500,
+                                                 enable_screen_tracking=True,
+                                                 aruco_info_file=ARUCO_INFO_LOCATION)
+    devices_config['eyetracker.hw.adhawk.EyeTracker'] = eyetracker_config
 else:
     print("{} is not a valid TRACKER name; please use 'mouse', 'eyelink', 'gazepoint', or 'tobii'.".format(TRACKER))
     core.quit()
@@ -112,9 +123,10 @@ win = visual.Window((1920, 1080),
                     fullscr=True,
                     allowGUI=False,
                     colorSpace=use_color_type,
-                    monitor='55w_60dist',
+                    monitor=MONITOR_NAME,
                     color=[0, 0, 0]
                     )
+
 
 win.setMouseVisible(False)
 text_stim = visual.TextStim(win, text="Start of Experiment",
@@ -129,15 +141,51 @@ win.flip()
 # will be saved, but device events are still available at runtime.
 io = iohub.launchHubServer(window=win, **devices_config)
 
+
 # Get some iohub devices for future access.
 keyboard = io.getDevice('keyboard')
 tracker = io.getDevice('tracker')
+
+if TRACKER == 'adhawk':
+    ##### screen tracking code ######
+    aruco_markers = []
+    markers_info = tracker.generate_markers(win_size_pix=win.size)
+    if markers_info is not None:
+        aruco_info, aruco_images = markers_info
+        cm2pix = lambda val: val * win.size[0] / win.monitor.getWidth()
+        for i, (aruco_id, pos_x, pos_y, size) in enumerate(aruco_info):
+            size = cm2pix(size)
+            pos = [-win.size[0] / 2 + cm2pix(pos_x),
+                   win.size[1] / 2 + cm2pix(pos_y)]
+            aruco_markers.append(visual.ImageStim(win,
+                                                  image=aruco_images[i],
+                                                  units='pix',
+                                                  pos=pos,
+                                                  size=size
+                                                  ))
+    def draw_markers(target_pos=None):
+        ''' Draw the aruco markers in the screen. Given a target xy position
+        it will ignore any marker that intersects with that point in the screen '''
+        if not eyetracker_config['enable_screen_tracking']:
+            return
+        for marker in aruco_markers:
+            xin = yin = False
+            if target_pos is not None:
+                xin = (marker.pos[0] - marker.size[0]/2) <= target_pos[0] <= (marker.pos[0] + marker.size[0]/2)
+                yin = (marker.pos[1] - marker.size[1]/2) <= target_pos[1] <= (marker.pos[1] + marker.size[1]/2)
+            if not (xin and yin):
+                marker.draw()
+    ##################################
 
 # Minimize the PsychoPy window if needed
 hideWindow(win)
 # Display calibration gfx window and run calibration.
 result = tracker.runSetupProcedure()
 print("Calibration returned: ", result)
+if not result:
+    win.close()
+    tracker.setConnectionState(False)
+    core.quit()
 # Maximize the PsychoPy window if needed
 showWindow(win)
 
@@ -169,9 +217,11 @@ validation_proc = iohub.ValidationProcedure(win,
                                             gaze_cursor=(-1.0, 1.0, -1.0),  # None or color value
                                             show_results_screen=True,  # bool
                                             save_results_screen=False,  # bool, only used if show_results_screen == True
+                                            custom_draw_callback=draw_markers if TRACKER == 'adhawk' else None,  # callback to draw aruco markers for adhawk screen tracking
                                             )
 
 # Run the validation procedure. run() does not return until the validation is complete.
+
 validation_proc.run()
 if validation_proc.results:
     results = validation_proc.results
@@ -205,6 +255,8 @@ while t < TRIAL_COUNT:
     run_trial = True
     tstart_time = core.getTime()
     while run_trial is True:
+        if TRACKER == 'adhawk':
+            draw_markers()
         # Get the latest gaze position in display coord space.
         gpos = tracker.getLastGazePosition()
         # Update stim based on gaze position

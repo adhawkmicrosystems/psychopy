@@ -170,6 +170,12 @@ class EyetrackerCalibration:
                 'text_color': textColor,
                 'screen_background_color': getattr(self.win._color, self.colorSpace),
             }
+        elif tracker == 'eyetracker.hw.adhawk.EyeTracker':
+            # As AdHawk
+            asDict = {
+                'type': self.targetLayout,
+                'randomize': self.randomisePos
+            }
         # Return
         for key, value in asDict.items():
             yield key, value

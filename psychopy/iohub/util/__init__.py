@@ -223,7 +223,8 @@ def getDeviceNames(device_name="eyetracker.hw", get_paths=True):
         [('GazePoint', 'eyetracker.hw.gazepoint.gp3.EyeTracker'),
          ('MouseGaze', 'eyetracker.hw.mouse.EyeTracker'),
          ('SR Research Ltd', 'eyetracker.hw.sr_research.eyelink.EyeTracker'),
-         ('Tobii Technology', 'eyetracker.hw.tobii.EyeTracker')]
+         ('Tobii Technology', 'eyetracker.hw.tobii.EyeTracker'),
+         ('AdHawk Microsystems', 'eyetracker.hw.adhawk.Eyetracker')]
     """
     names = []
     dconfigs = getDeviceDefaultConfig(device_name)

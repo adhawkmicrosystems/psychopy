@@ -14,6 +14,7 @@ Here the available options are:
 - MouseGaze
 - SR Research Ltd (aka EyeLink)
 - Tobii Technology
+- AdHawk Microsystems
 
 If you are developing your eye-tracking paradigm out-of-lab we recommend using *MouseGaze* which will simulate eye movement
 responses through monitoring your mouse cursor and buttons to simulate movements and blinks.

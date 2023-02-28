@@ -135,6 +135,10 @@ class SettingsComponent:
                  plPupilRemoteTimeoutMs=1000,
                  plPupilCaptureRecordingEnabled=True,
                  plPupilCaptureRecordingLocation="",
+                 ahSampleRate=125,
+                 ahEnableScreenTracking=True,
+                 ahArucoInfoFile="",
+                 ahCalibrationSamplingDuration=500,
                  keyboardBackend="ioHub",
                  filename=None, exportHTML='on Sync'):
         self.type = 'Settings'
@@ -373,6 +377,7 @@ class SettingsComponent:
             "Pupil Labs": ["plPupillometryOnly", "plSurfaceName", "plConfidenceThreshold",
                            "plPupilRemoteAddress", "plPupilRemotePort", "plPupilRemoteTimeoutMs",
                            "plPupilCaptureRecordingEnabled", "plPupilCaptureRecordingLocation"],
+            "AdHawk Microsystems": ["ahSampleRate", "ahCalibrationSamplingDuration", "ahEnableScreenTracking", "ahArucoInfoFile"],
         }
         for tracker in trackerParams:
             for depParam in trackerParams[tracker]:
@@ -572,6 +577,30 @@ class SettingsComponent:
             plPupilCaptureRecordingLocation, valType='str', inputType="single",
             hint=_translate("Pupil Capture Recording Location"),
             label=_translate("Pupil Capture Recording Location"), categ="Eyetracking"
+        )
+
+        # AdHawk Microsystems
+        self.params['ahSampleRate'] = Param(
+            ahSampleRate, valType='num', inputType="choice",
+            allowedVals=['60', '125', '250', '500'],
+            hint=_translate("MindLink sampling rate (Hz)."),
+            label=_translate("Sampling Rate"), categ="Eyetracking"
+        )
+        self.params['ahCalibrationSamplingDuration'] = Param(
+            ahCalibrationSamplingDuration, valType='num', inputType="single",
+            hint=_translate("The sampling duration for each calibration marker (ms). The supported range is from "
+                            "100 ms to 1000 ms."),
+            label=_translate("Calibration sampling duration (ms)"), categ="Eyetracking"
+        )
+        self.params['ahEnableScreenTracking'] = Param(
+            ahEnableScreenTracking, valType='bool', inputType="bool",
+            hint=_translate("Enable AdHawk screen tracking"),
+            label=_translate("Enable Screen Tracking"), categ="Eyetracking"
+        )
+        self.params['ahArucoInfoFile'] = Param(
+            ahArucoInfoFile, valType='str', inputType="single",
+            hint=_translate("enter the location of the 'aruco_info' excel file that defines the aruco markers"),
+            label=_translate("Aruco Info Location"), categ="Eyetracking"
         )
 
         # Input
@@ -1207,6 +1236,25 @@ class SettingsComponent:
                 buff.writeIndentedLines(code % inits)
 
                 # Close runtime_settings dict
+                buff.setIndentLevel(-1, relative=True)
+                code = (
+                    "}\n"
+                )
+                buff.writeIndentedLines(code % inits)
+
+            elif self.params['eyetracker'] == "AdHawk Microsystems":
+                code = (
+                    "'runtime_settings': {\n"
+                )
+                buff.writeIndentedLines(code % inits)
+                buff.setIndentLevel(1, relative=True)
+                code = (
+                    "'sampling_rate': %(ahSampleRate)s,\n"
+                    "'calibration_sampling_duration': %(ahCalibrationSamplingDuration)s,\n"
+                    "'enable_screen_tracking': %(ahEnableScreenTracking)s,\n"
+                    "'aruco_info_file': %(ahArucoInfoFile)s,\n"
+                )
+                buff.writeIndentedLines(code % inits)
                 buff.setIndentLevel(-1, relative=True)
                 code = (
                     "}\n"

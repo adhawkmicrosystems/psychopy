@@ -1,0 +1,58 @@
+eyetracker.hw.adhawk.EyeTracker:
+
+    name:
+        IOHUB_STRING:
+            min_length: 1
+            max_length: 32
+            first_char_alpha: True
+
+    device_number: 0
+
+    model_name:
+        IOHUB_STRING:
+            min_length: 0
+            max_length: 64
+
+    enable: IOHUB_BOOL
+
+    manufacturer_name: AdHawk Microsystems
+
+    monitor_event_types:
+        IOHUB_LIST:
+            valid_values: [BinocularEyeSampleEvent, BlinkEndEvent]
+            min_length: 1
+            max_length: 2
+
+    save_events: IOHUB_BOOL
+
+    stream_events: IOHUB_BOOL
+
+    auto_report_events: False
+
+    event_buffer_length:
+        IOHUB_INT:
+            min: 1
+            max: 2048
+
+    runtime_settings:
+        sampling_rate:
+            IOHUB_LIST:
+                valid_values: [60, 125, 250, 500]
+                min_length: 1
+                max_length: 1
+        calibration_sampling_duration:
+            IOHUB_INT:
+                min: 100
+                max: 1000
+        enable_screen_tracking: IOHUB_BOOL
+        aruco_info_file:
+            IOHUB_STRING:
+                min_length: 0
+                max_length: 1024
+    calibration:
+        type:
+            IOHUB_LIST:
+                valid_values: [THREE_POINTS, FIVE_POINTS, NINE_POINTS, THIRTEEN_POINTS]
+                min_length: 1
+                max_length: 1
+        randomize: IOHUB_BOOL

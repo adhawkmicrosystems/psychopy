@@ -16,21 +16,21 @@ To use the validation process from within a Coder script:
 
 See demos/coder/iohub/eyetracking/validation.py for a complete example.
 """
-from weakref import proxy
-import numpy as np
-from time import sleep
 import os
 import sys
+from time import sleep
+from weakref import proxy
+
+import numpy as np
 from matplotlib import pyplot as pl
-
 from psychopy import visual
-from psychopy.iohub.util import win32MessagePump, normjoin
+from psychopy.iohub.client import Computer, ioHubConnection
+from psychopy.iohub.client.eyetracker.validation import (KeyboardTrigger,
+                                                         PositionGrid,
+                                                         TimeTrigger, Trigger)
 from psychopy.iohub.constants import EventConstants
-from psychopy.iohub.client import ioHubConnection, Computer
-from psychopy.tools.monitorunittools import convertToPix
-from psychopy.tools.monitorunittools import pix2deg, deg2pix
-
-from psychopy.iohub.client.eyetracker.validation import PositionGrid, Trigger, KeyboardTrigger, TimeTrigger
+from psychopy.iohub.util import normjoin, win32MessagePump
+from psychopy.tools.monitorunittools import convertToPix, deg2pix, pix2deg
 
 getTime = Computer.getTime
 
@@ -192,7 +192,8 @@ class ValidationProcedure:
                  intro_text='Ready to Start Validation Procedure.',
                  results_in_degrees=False,
                  terminate_key="escape",
-                 toggle_gaze_cursor_key="g"):
+                 toggle_gaze_cursor_key="g",
+                 custom_draw_callback=None):
         """
         ValidationProcedure is used to test the gaze accuracy of a calibrated eye tracking system.
 
@@ -236,6 +237,7 @@ class ValidationProcedure:
         :param triggers: Target progression triggers. Default is 'space' key press.
         :param storeeventsfor: iohub devices that events should be stored for.
         """
+        self._custom_draw_callback = custom_draw_callback
         self.terminate_key = terminate_key
         self.toggle_gaze_cursor_key = toggle_gaze_cursor_key
 
@@ -319,7 +321,8 @@ class ValidationProcedure:
                                                        terminate_key=terminate_key,
                                                        gaze_cursor_key=toggle_gaze_cursor_key,
                                                        gaze_cursor=gaze_cursor,
-                                                       color_space=color_space, unit_type=unit_type)
+                                                       color_space=color_space, unit_type=unit_type,
+                                                       custom_draw_callback=self._custom_draw_callback)
 
     def run(self):
         """
@@ -775,7 +778,7 @@ class ValidationTargetRenderer:
 
     def __init__(self, win, target, positions, storeeventsfor=[], triggers=None, msgcategory='',
                  io=None, terminate_key='escape', gaze_cursor_key='g', gaze_cursor=None,
-                 color_space=None, unit_type=None):
+                 color_space=None, unit_type=None, custom_draw_callback=None):
         """
         ValidationTargetRenderer is an internal class used by `ValidationProcedure`.
 
@@ -797,6 +800,7 @@ class ValidationTargetRenderer:
         :param msgcategory:
         :param io:
         """
+        self._custom_draw_callback = custom_draw_callback
         self.terminate_key = terminate_key
         self.gaze_cursor_key = gaze_cursor_key
         self.display_gaze = False
@@ -833,6 +837,9 @@ class ValidationTargetRenderer:
         """
         Draw the target stim.
         """
+        target_pos_pix = toPix(self.win, *self.target.pos)
+        if self._custom_draw_callback is not None:
+            self._custom_draw_callback((target_pos_pix[0][0], target_pos_pix[1][0]))
         self.target.draw()
         if self.gaze_cursor and self.display_gaze:
             gpos = self.io.devices.tracker.getLastGazePosition()
